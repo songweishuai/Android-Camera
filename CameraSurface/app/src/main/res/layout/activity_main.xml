@@ -22,19 +22,26 @@
         android:layout_width="280dp"
         android:layout_height="match_parent" />
 
-    <!--    <SurfaceView-->
-    <!--        android:id="@+id/surfaceView_1"-->
-    <!--        android:layout_width="280dp"-->
-    <!--        android:layout_height="match_parent"-->
-    <!--        android:layout_marginLeft="290dp"/>-->
+    <SurfaceView
+        android:id="@+id/surfaceView_2"
+        android:layout_width="280dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="290dp"/>
 
 <!--    <Button-->
-<!--        android:id="@+id/button"-->
+<!--        android:id="@+id/start"-->
 <!--        android:layout_width="100dp"-->
 <!--        android:layout_height="100dp"-->
-<!--        android:text="切换"-->
+<!--        android:text="开始"-->
 <!--        tools:layout_editor_absoluteX="295dp"-->
 <!--        tools:layout_editor_absoluteY="280dp" />-->
+
+<!--    <Button-->
+<!--        android:id="@+id/stop"-->
+<!--        android:layout_width="100dp"-->
+<!--        android:layout_height="100dp"-->
+<!--        android:text="停止"-->
+<!--        />-->
 
 
 </LinearLayout>

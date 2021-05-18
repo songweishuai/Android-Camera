@@ -1,64 +1,78 @@
 package com.example.camerasurface;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 import android.hardware.Camera;
-import android.hardware.camera2.CameraDevice;
 import android.media.MediaRecorder;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
-import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
-
+import java.io.File;
 import java.io.IOException;
+import java.util.Calendar;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+    private String TAG = "Surface Camera Demo";
+    private String path;
+
     SurfaceView surfaceView;
     SurfaceHolder holder;
     Camera mCamera;
-    private String TAG = "Surface Camera Demo";
-
-    //Button mButton;
-    //Camera mCamera_1;
-    //SurfaceView surfaceView_1;
-    //SurfaceHolder holder_1;
+    MediaRecorder mRecorder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //mButton = findViewById(R.id.button);
-        //mButton.setOnClickListener(new View.OnClickListener() {
-        //    @Override
-        //    public void onClick(View v) {
-        //        Toast.makeText(MainActivity.this, "Clicked", Toast.LENGTH_SHORT).show();
-        //
-        //        if (mCamera != null) {
-        //            mCamera.stopPreview();
-        //            mCamera.release();
-        //        }
-        //
-        //        mCamera = Camera.open(1);
-        //        if (mCamera == null) {
-        //            Log.i("onResume", "mCamera is null ");
-        //        }
-        //
-        //        //相机参数设置
-        //        Camera.Parameters param = mCamera.getParameters();
-        //        param.setPreviewSize(640, 480);
-        //        mCamera.setParameters(param);
-        //
-        //        mCamera.startPreview();
-        //    }
-        //});
-
         surfaceView = findViewById(R.id.surfaceView);
         holder = surfaceView.getHolder();
+
+        openCamera_1();
+
+        mRecorder = new MediaRecorder();
+        mRecorder.setCamera(mCamera);
+
+        try {
+            // 这两项需要放在setOutputFormat之前
+            mRecorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER);
+            mRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+
+            // Set output file format
+            mRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+
+            // 这两项需要放在setOutputFormat之后
+            mRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
+            mRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.MPEG_4_SP);
+
+            mRecorder.setVideoSize(640, 480);
+            mRecorder.setVideoFrameRate(30);
+            mRecorder.setVideoEncodingBitRate(3 * 1024 * 1024);
+            mRecorder.setOrientationHint(90);
+            //设置记录会话的最大持续时间（毫秒）
+            mRecorder.setMaxDuration(30 * 1000);
+            mRecorder.setPreviewDisplay(holder.getSurface());
+
+            path = getSDPath();
+            Log.i("*********","path:"+path);
+            if (path != null) {
+//                File dir = new File(path + "/recordtest");
+                File dir = new File("/data"+"/recordtest");
+
+                if (!dir.exists()) {
+                    Log.i(TAG,"1111111111115:"+dir.mkdir());
+                }
+                path = dir + "/" + getDate() + ".mp4";
+                Log.i(TAG,"path:"+path);
+                mRecorder.setOutputFile(path);
+                mRecorder.prepare();
+                mRecorder.start();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         holder.addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -82,32 +96,6 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
-
-        //surfaceView_1 = findViewById(R.id.surfaceView_1);
-        //holder_1 = surfaceView_1.getHolder();
-        //holder_1.addCallback(new SurfaceHolder.Callback() {
-        //    @Override
-        //    public void surfaceCreated(SurfaceHolder holder) {
-        //
-        //    }
-        //
-        //    @Override
-        //    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        //        try {
-        //            mCamera_1.setPreviewDisplay(holder);
-        //            mCamera_1.startPreview();
-        //        } catch (IOException e) {
-        //            e.printStackTrace();
-        //        }
-        //    }
-        //
-        //    @Override
-        //    public void surfaceDestroyed(SurfaceHolder holder) {
-        //
-        //    }
-        //
-        //});
-
     }
 
 
@@ -115,22 +103,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-        int cout = Camera.getNumberOfCameras();
-        int CameraIndex = 0;
-        Log.i(TAG, "Camera Count:" + cout);
-        Camera.CameraInfo info = new Camera.CameraInfo();
+//        int cout = Camera.getNumberOfCameras();
+//        Log.i(TAG, "Camera Count:" + cout);
+//        Camera.CameraInfo info = new Camera.CameraInfo();
+//
+//
+//        for (int nIndex = 0; nIndex < cout; nIndex++) {
+//            Camera.getCameraInfo(nIndex, info);
+//            Log.i(TAG, "info.orientation:" + info.orientation);
+//            Log.i(TAG, "info.facing" + info.facing);
+//        }
+//
+//        openCamera_1();
+    }
 
-
-        for (int nIndex = 0; nIndex < cout; nIndex++) {
-            Camera.getCameraInfo(nIndex, info);
-
-            Log.i(TAG, "info.orientation:" + info.orientation);
-            Log.i(TAG, "info.facing" + info.facing);
-
-            CameraIndex = nIndex;
-        }
-
-        Log.i(TAG, "CameraIndex:" + CameraIndex);
+    private void openCamera_1() {
+        int width = 320;
+        int height = 240;
 
         mCamera = Camera.open(1);
         if (mCamera == null) {
@@ -147,28 +136,30 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //设置视频分辨率
-        param.setPreviewSize(640, 480);
+        param.setPreviewSize(width, height);
 
         //自动对焦
         List<String> focusMode = param.getSupportedFocusModes();
         Log.i(TAG, "focusMode:" + focusMode);
-        if(!focusMode.contains(Camera.Parameters.FOCUS_MODE_AUTO)){
+        if (!focusMode.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
             Log.i(TAG, "focusMode 不支持自动对焦");
         }
+
+        //param.getPictureFormat();
+        List<Integer> suppFormat = param.getSupportedPictureFormats();
+        for (int form : suppFormat) {
+            Log.i(TAG, "support Format: " + form);
+        }
+        //PixelFormat.RGB_565
+
 
         //设置参数
         mCamera.setParameters(param);
 
+        Log.i(TAG, "onResume: " + mCamera.toString());
+
         //设置旋转
         mCamera.setDisplayOrientation(270);
-
-        //mCamera_1 = Camera.open(1);
-        //if (mCamera_1 == null) {
-        //  Log.i("onResume", "mCamera_1 is null ");
-        //}
-        //param.setPreviewSize(640, 480);
-        //mCamera_1.setParameters(param);
-
     }
 
     @Override
@@ -178,11 +169,6 @@ public class MainActivity extends AppCompatActivity {
             mCamera.stopPreview();
             mCamera.release();
         }
-
-        //if (mCamera_1 != null) {
-        //  mCamera_1.stopPreview();
-        //  mCamera_1.release();
-        //}
     }
 
     @Override
@@ -192,10 +178,43 @@ public class MainActivity extends AppCompatActivity {
             mCamera.stopPreview();
             mCamera.release();
         }
-
-        //if (mCamera_1 != null) {
-        //mCamera_1.stopPreview();
-        //mCamera_1.release();
-        //}
     }
+
+    /**
+     * 获取SD path
+     *
+     * @return
+     */
+    public String getSDPath() {
+        File sdDir = null;
+        boolean sdCardExist = Environment.getExternalStorageState()
+                .equals(android.os.Environment.MEDIA_MOUNTED); // 判断sd卡是否存在
+        if (sdCardExist) {
+            sdDir = Environment.getExternalStorageDirectory();// 获取跟目录
+            return sdDir.toString();
+        }
+
+        return null;
+    }
+
+    /**
+     * 获取系统时间
+     *
+     * @return
+     */
+    public static String getDate() {
+        Calendar ca = Calendar.getInstance();
+        int year = ca.get(Calendar.YEAR);           // 获取年份
+        int month = ca.get(Calendar.MONTH);         // 获取月份
+        int day = ca.get(Calendar.DATE);            // 获取日
+        int minute = ca.get(Calendar.MINUTE);       // 分
+        int hour = ca.get(Calendar.HOUR);           // 小时
+        int second = ca.get(Calendar.SECOND);       // 秒
+
+        String date = "" + year + (month + 1) + day + hour + minute + second;
+        Log.d("getDate:", "date:" + date);
+
+        return date;
+    }
+
 }
