@@ -15,12 +15,17 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
     private String TAG = "Surface Camera Demo";
+
     private String path;
+    MediaRecorder mRecorder;
 
     SurfaceView surfaceView;
     SurfaceHolder holder;
     Camera mCamera;
-    MediaRecorder mRecorder;
+
+    SurfaceView surfaceView_2;
+    SurfaceHolder holder_2;
+    Camera mCamera_2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,8 +35,10 @@ public class MainActivity extends AppCompatActivity {
         surfaceView = findViewById(R.id.surfaceView);
         holder = surfaceView.getHolder();
 
-        openCamera_1();
+        surfaceView_2 = findViewById(R.id.surfaceView_2);
+        holder_2 = surfaceView_2.getHolder();
 
+        /*openCamera_1();
         mRecorder = new MediaRecorder();
         mRecorder.setCamera(mCamera);
 
@@ -72,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
 
         holder.addCallback(new SurfaceHolder.Callback() {
             @Override
@@ -96,6 +103,29 @@ public class MainActivity extends AppCompatActivity {
             }
 
         });
+
+        holder_2.addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) {
+
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                try {
+                    mCamera_2.setPreviewDisplay(holder);
+                    mCamera_2.startPreview();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) {
+
+            }
+
+        });
     }
 
 
@@ -103,18 +133,20 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
-//        int cout = Camera.getNumberOfCameras();
-//        Log.i(TAG, "Camera Count:" + cout);
-//        Camera.CameraInfo info = new Camera.CameraInfo();
-//
-//
-//        for (int nIndex = 0; nIndex < cout; nIndex++) {
-//            Camera.getCameraInfo(nIndex, info);
-//            Log.i(TAG, "info.orientation:" + info.orientation);
-//            Log.i(TAG, "info.facing" + info.facing);
-//        }
-//
-//        openCamera_1();
+        int cout = Camera.getNumberOfCameras();
+        Log.i(TAG, "Camera Count:" + cout);
+        Camera.CameraInfo info = new Camera.CameraInfo();
+
+
+        for (int nIndex = 0; nIndex < cout; nIndex++) {
+            Camera.getCameraInfo(nIndex, info);
+            Log.i(TAG, "info.orientation:" + info.orientation);
+            Log.i(TAG, "info.facing" + info.facing);
+        }
+
+        openCamera_1();
+
+        openCamera_2();
     }
 
     private void openCamera_1() {
@@ -162,12 +194,62 @@ public class MainActivity extends AppCompatActivity {
         mCamera.setDisplayOrientation(270);
     }
 
+    private void openCamera_2() {
+        int width = 320;
+        int height = 240;
+
+        mCamera_2 = Camera.open(0);
+        if (mCamera_2 == null) {
+            Log.i(TAG, "mCamera_2 is null ");
+        }
+
+        //相机参数设置
+        Camera.Parameters param = mCamera_2.getParameters();
+
+        //获取支持分辨率
+        List<Camera.Size> supportSize = param.getSupportedPreviewSizes();
+        for (Camera.Size size : supportSize) {
+            Log.i(TAG, "Support Size w:" + size.width + "  h:" + size.height);
+        }
+
+        //设置视频分辨率
+        param.setPreviewSize(width, height);
+
+        //自动对焦
+        List<String> focusMode = param.getSupportedFocusModes();
+        Log.i(TAG, "focusMode:" + focusMode);
+        if (!focusMode.contains(Camera.Parameters.FOCUS_MODE_AUTO)) {
+            Log.i(TAG, "focusMode 不支持自动对焦");
+        }
+
+        //param.getPictureFormat();
+        List<Integer> suppFormat = param.getSupportedPictureFormats();
+        for (int form : suppFormat) {
+            Log.i(TAG, "support Format: " + form);
+        }
+        //PixelFormat.RGB_565
+
+
+        //设置参数
+        mCamera_2.setParameters(param);
+
+        Log.i(TAG, "onResume: " + mCamera_2.toString());
+
+        //设置旋转
+        mCamera_2.setDisplayOrientation(270);
+    }
+
     @Override
     protected void onPause() {
         super.onPause();
         if (mCamera != null) {
             mCamera.stopPreview();
             mCamera.release();
+        }
+
+        if (mCamera_2 != null) {
+            mCamera_2.stopPreview();
+            mCamera_2.release();
         }
     }
 
@@ -177,6 +259,11 @@ public class MainActivity extends AppCompatActivity {
         if (mCamera != null) {
             mCamera.stopPreview();
             mCamera.release();
+        }
+
+        if (mCamera_2 != null) {
+            mCamera_2.stopPreview();
+            mCamera_2.release();
         }
     }
 
@@ -216,5 +303,4 @@ public class MainActivity extends AppCompatActivity {
 
         return date;
     }
-
 }
